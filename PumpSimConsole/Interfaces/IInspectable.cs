@@ -1,0 +1,1 @@
+public interface IInspectable { string Inspect(); }
