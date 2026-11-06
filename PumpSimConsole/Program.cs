@@ -16,4 +16,9 @@ foreach (Component c in parts)
     {
         Console.WriteLine($"    Inspect: {inspectable.Inspect()}");
     }
+
+    if (c is IRepairable repairable)
+    {
+        Console.WriteLine($"    Repair: {repairable.Repair()}");
+    }
 }

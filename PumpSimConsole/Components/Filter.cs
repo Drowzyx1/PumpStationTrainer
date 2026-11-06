@@ -1,4 +1,4 @@
-public class Filter : Component, IInspectable
+public class Filter : Component, IInspectable, IRepairable
 {
 
     public Filter(string name, int hours) : base(name, hours) { }
@@ -15,6 +15,12 @@ public class Filter : Component, IInspectable
     public override string Describe()
     {
         return $"Filter: {Name}, Hours: {Hours}";
+    }
+
+    public string Repair()
+    {
+        Hours = 0;
+        return "Filter has been repaired";
     }
 
 }

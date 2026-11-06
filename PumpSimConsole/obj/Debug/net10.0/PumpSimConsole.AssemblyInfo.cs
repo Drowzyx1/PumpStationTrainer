@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("PumpSimConsole")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+e64f02969327f0df1b3b85e86568321ccfb97ea0")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+85765975655bc51a88f8d17a299b954f625a27da")]
 [assembly: System.Reflection.AssemblyProductAttribute("PumpSimConsole")]
 [assembly: System.Reflection.AssemblyTitleAttribute("PumpSimConsole")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]
