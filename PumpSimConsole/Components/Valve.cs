@@ -1,6 +1,7 @@
 public class Valve : Component, IRepairable
 {
-    public event Action<bool>? OnToggled;
+    public event Action<bool> OnToggled;
+    [ShowInDebug]
     public bool IsOpen { get; private set; } = true;
 
     public Valve(string name, int hours) : base(name, hours) { }

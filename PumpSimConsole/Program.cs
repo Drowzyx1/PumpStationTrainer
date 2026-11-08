@@ -23,11 +23,14 @@ foreach (Component c in parts)
     {
         Console.WriteLine($"    Repair: {repairable.Repair()}");
     }
-
-    Valve supply = (Valve)parts[1];
-    PressureSystem pressure = new PressureSystem(supply);
-    ValveLogger logger = new ValveLogger(supply);
-
-    supply.Toggle();
-    supply.Toggle();
 }
+
+
+Valve supply = (Valve)parts[1];
+PressureSystem pressure = new PressureSystem(supply);
+ValveLogger logger = new ValveLogger(supply);
+
+supply.Toggle();
+supply.Toggle();
+
+Console.WriteLine($"Report: {DebugReport.Describe(supply)}");
