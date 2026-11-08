@@ -8,6 +8,8 @@ List<Component> parts = new List<Component>
     new Filter("Line Filter", 250),
 };
 
+Reports.PrintSummary(parts);
+
 foreach (Component c in parts)
 {
     Console.WriteLine($"{c.Describe()} | Faulty: {c.IsFaulty()}");
