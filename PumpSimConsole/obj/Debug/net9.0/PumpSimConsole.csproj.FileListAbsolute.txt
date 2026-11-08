@@ -1,0 +1,15 @@
+/Users/carlos/Desktop/Projects/PumpStationTrainer/PumpSimConsole/bin/Debug/net9.0/PumpSimConsole
+/Users/carlos/Desktop/Projects/PumpStationTrainer/PumpSimConsole/bin/Debug/net9.0/PumpSimConsole.deps.json
+/Users/carlos/Desktop/Projects/PumpStationTrainer/PumpSimConsole/bin/Debug/net9.0/PumpSimConsole.runtimeconfig.json
+/Users/carlos/Desktop/Projects/PumpStationTrainer/PumpSimConsole/bin/Debug/net9.0/PumpSimConsole.dll
+/Users/carlos/Desktop/Projects/PumpStationTrainer/PumpSimConsole/bin/Debug/net9.0/PumpSimConsole.pdb
+/Users/carlos/Desktop/Projects/PumpStationTrainer/PumpSimConsole/obj/Debug/net9.0/PumpSimConsole.GeneratedMSBuildEditorConfig.editorconfig
+/Users/carlos/Desktop/Projects/PumpStationTrainer/PumpSimConsole/obj/Debug/net9.0/PumpSimConsole.AssemblyInfoInputs.cache
+/Users/carlos/Desktop/Projects/PumpStationTrainer/PumpSimConsole/obj/Debug/net9.0/PumpSimConsole.AssemblyInfo.cs
+/Users/carlos/Desktop/Projects/PumpStationTrainer/PumpSimConsole/obj/Debug/net9.0/PumpSimConsole.csproj.CoreCompileInputs.cache
+/Users/carlos/Desktop/Projects/PumpStationTrainer/PumpSimConsole/obj/Debug/net9.0/PumpSimConsole.sourcelink.json
+/Users/carlos/Desktop/Projects/PumpStationTrainer/PumpSimConsole/obj/Debug/net9.0/PumpSimConsole.dll
+/Users/carlos/Desktop/Projects/PumpStationTrainer/PumpSimConsole/obj/Debug/net9.0/refint/PumpSimConsole.dll
+/Users/carlos/Desktop/Projects/PumpStationTrainer/PumpSimConsole/obj/Debug/net9.0/PumpSimConsole.pdb
+/Users/carlos/Desktop/Projects/PumpStationTrainer/PumpSimConsole/obj/Debug/net9.0/PumpSimConsole.genruntimeconfig.cache
+/Users/carlos/Desktop/Projects/PumpStationTrainer/PumpSimConsole/obj/Debug/net9.0/ref/PumpSimConsole.dll

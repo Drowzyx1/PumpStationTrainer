@@ -1,5 +1,7 @@
 public class Valve : Component, IRepairable
 {
+    public event Action<bool> OnToggled;
+    public bool IsOpen { get; private set; } = true;
 
     public Valve(string name, int hours) : base(name, hours) { }
     public override bool IsFaulty()
@@ -16,6 +18,12 @@ public class Valve : Component, IRepairable
     public override string Describe()
     {
         return $"Valve: {Name}, Hours: {Hours}";
+    }
+
+    public void Toggle()
+    {
+        IsOpen = !IsOpen;
+        OnToggled?.Invoke(IsOpen);
     }
 
 }
