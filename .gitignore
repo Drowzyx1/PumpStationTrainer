@@ -109,5 +109,5 @@ InitTestScene*.unity*
 /[Aa]ssets/[Ss]ceneDependencyCache*
 !PumpSimConsole/PumpSimConsole.csproj
 
-   **/bin/
-   **/obj/
+**/bin/
+**/obj/
