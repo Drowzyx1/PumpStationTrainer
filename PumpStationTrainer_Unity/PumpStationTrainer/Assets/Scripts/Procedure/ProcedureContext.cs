@@ -5,8 +5,10 @@ using System.Linq;
 public class ProcedureContext : MonoBehaviour
 {
     [SerializeField] private PressureSystem pressure;
+    [SerializeField] private Door accessPanel;
     private Dictionary<string, Valve> _valves;
     public PressureSystem Pressure { get => pressure; }
+    public Door AccessPanel { get => accessPanel; }
 
     public void Awake()
     {
