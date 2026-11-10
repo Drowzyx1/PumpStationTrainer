@@ -17,14 +17,23 @@ The finished Unity version will show each instruction on screen, track a step ch
 
 ## Progress
 
-| Milestone                                                                         | Status  |
-| --------------------------------------------------------------------------------- | ------- |
-| 0 · Setup (Unity 6.3 LTS, .NET, Git)                                              | ✅ Done |
-| 1 · Pure C# model (console app)                                                   | ✅ Done |
-| 2 · Unity interaction: clickable valve, gauge driven by events, prefabs           | ✅ Done |
-| 3 · Procedure system: steps as ScriptableObjects, UI, mistake detection           | ⬜      |
-| 4 · Physics and polish: kinematic door, grabbable filters, socket, object pooling | ⬜      |
-| 5 · Profiling, debugging and documentation                                        | ⬜      |
+| Milestone                                                                         | Status                                                                                           |
+| --------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------ |
+| 0 · Setup (Unity 6.3 LTS, .NET, Git)                                              | ✅ Done                                                                                          |
+| 1 · Pure C# model (console app)                                                   | ✅ Done                                                                                          |
+| 2 · Unity interaction: clickable valve, gauge driven by events, prefabs           | ✅ Done                                                                                          |
+| 3 · Procedure system: steps as ScriptableObjects, UI, mistake detection           | 🟡 In progress: step system, procedure manager and UI done; door step and mistake detection next |
+| 4 · Physics and polish: kinematic door, grabbable filters, socket, object pooling | ⬜                                                                                               |
+| 5 · Profiling, debugging and documentation                                        | ⬜                                                                                               |
+
+## Milestone 3: the procedure system (in progress)
+
+The trainee is now guided through the procedure on screen: close the supply valve, wait for the pressure to bleed off, reopen the valve. Each step ticks off a checklist, and the run ends with a summary.
+
+- **Steps as data (ScriptableObjects):** `TrainingStep` is an abstract `ScriptableObject` with an `instruction` and `abstract bool IsComplete(ProcedureContext ctx)`. `ValveStateStep` and `PressureBelowStep` each override it with their own rule, and each step is an asset created from the editor menu, so a new procedure can be built without writing code.
+- **Assets vs scene data:** step assets live in the project, not the scene, so they can't reference scene objects directly. A `ProcedureContext` in the scene gives them access: it builds a `Dictionary<string, Valve>` of every valve keyed by its `Id` (LINQ `ToDictionary`), and `GetValve` logs a clear error for an unknown id instead of failing later with a null reference.
+- **`ProcedureManager`:** runs the steps in order, calling `IsComplete` without knowing the step's concrete type (polymorphism). It times each step and raises `OnStepStarted` / `OnProcedureComplete`. Its state is exposed read-only (`IReadOnlyList`, get-only properties), and the first event fires in `Start()`, after every listener has subscribed in `OnEnable()`.
+- **`ProcedureUI`:** fully event-driven, so nothing updates per frame. It shows the current instruction, rebuilds the checklist with a `StringBuilder`, and computes the end summary (total time, slowest step) with LINQ `Sum`, `Max` and `IndexOf`. Layout uses a Canvas Scaler and anchored TextMeshPro text with background panels.
 
 ## Milestone 2: Unity interaction (`PumpStationTrainer_Unity/`)
 
@@ -86,11 +95,13 @@ PumpStationTrainer_Unity/.../Assets/Scripts/
 ├── Core/           ShowInDebugAttribute, IInteractable, InteractableBase
 ├── Interaction/    Valve, Interactor
 ├── Player/         SimpleCameraController
-└── Simulation/     PressureSystem, Gauge
+├── Simulation/     PressureSystem, Gauge
+├── Procedure/      ProcedureContext, TrainingStep, ValveStateStep, PressureBelowStep, ProcedureManager
+└── UI/             ProcedureUI
 ```
 
 ## Next up
 
-Milestone 3: the procedure system. Each training step becomes a `ScriptableObject` asset built on an abstract `TrainingStep` class, a `ProcedureManager` runs them in order, and an on-screen UI shows the current instruction and a checklist.
+Finish Milestone 3 and start Milestone 4: a kinematic access-panel door with its own step, then grabbable filters, a filter socket, and mistake detection (removing the filter while the system is pressurized).
 
 **Ideas for later:** make the drain valve speed up pressure bleed-off.
