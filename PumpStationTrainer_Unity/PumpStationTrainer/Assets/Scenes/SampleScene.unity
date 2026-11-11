@@ -268,6 +268,7 @@ GameObject:
   - component: {fileID: 135772956}
   - component: {fileID: 135772955}
   - component: {fileID: 135772958}
+  - component: {fileID: 135772959}
   m_Layer: 0
   m_Name: Procedure
   m_TagString: Untagged
@@ -340,6 +341,21 @@ MonoBehaviour:
   pressure: {fileID: 2097216149}
   oldFilter: {fileID: 4411589506810045443}
   safePsi: 1
+--- !u!114 &135772959
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 135772954}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: dd7afba78a2a46b41b80e9886a59955f, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::SparkEffects
+  mistakes: {fileID: 135772958}
+  sparkPrefab: {fileID: 668157929381369355, guid: 38fb3367ed22b9744856d75194402286, type: 3}
+  spawnPoint: {fileID: 344392724}
 --- !u!1 &136881519
 GameObject:
   m_ObjectHideFlags: 0

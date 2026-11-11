@@ -17,14 +17,14 @@ The finished Unity version will show each instruction on screen, track a step ch
 
 ## Progress
 
-| Milestone                                                                         | Status                                                                                          |
-| --------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------- |
-| 0 · Setup (Unity 6.3 LTS, .NET, Git)                                              | ✅ Done                                                                                         |
-| 1 · Pure C# model (console app)                                                   | ✅ Done                                                                                         |
-| 2 · Unity interaction: clickable valve, gauge driven by events, prefabs           | ✅ Done                                                                                         |
-| 3 · Procedure system: steps as ScriptableObjects, UI, mistake detection           | ✅ Done                                                                                         |
-| 4 · Physics and polish: kinematic door, grabbable filters, socket, object pooling | 🟡 Nearly done: door, grabbable filters and socket done; pooled effects and summary polish next |
-| 5 · Profiling, debugging and documentation                                        | ⬜                                                                                              |
+| Milestone                                                                         | Status  |
+| --------------------------------------------------------------------------------- | ------- |
+| 0 · Setup (Unity 6.3 LTS, .NET, Git)                                              | ✅ Done |
+| 1 · Pure C# model (console app)                                                   | ✅ Done |
+| 2 · Unity interaction: clickable valve, gauge driven by events, prefabs           | ✅ Done |
+| 3 · Procedure system: steps as ScriptableObjects, UI, mistake detection           | ✅ Done |
+| 4 · Physics and polish: kinematic door, grabbable filters, socket, object pooling | ✅ Done |
+| 5 · Profiling, debugging and documentation                                        | ⬜      |
 
 ## Milestones 3–4: the full procedure
 
@@ -34,6 +34,7 @@ The complete six-step procedure now runs end to end: open the access panel, clos
 - **Grabbable filters (`Grabbable`):** non-kinematic while loose, so physics drops them; kinematic while held (parented to a hold point on the camera) or installed. Each method sets the state it creates (`PickUp`, `Drop`, `LockInto`), with a shared `Attach` helper. Picking one up raises `OnPickedUp`.
 - **Filter socket (`FilterSocket`):** a trigger collider that installs a dropped part through guard clauses (socket empty, is a `Grabbable`, not held, correct part id). It holds the installed part by reference (composition, not inheritance), subscribes to its `OnPickedUp` on insert and unsubscribes on removal, and exposes a computed `CurrentPartId`.
 - **Mistake detection (`MistakeTracker`):** a second, independent listener on the old filter's `OnPickedUp`. If pressure is above a safe level, it records the mistake and raises `OnMistake`, which the UI shows as a warning.
+- **Pooled spark effects (`SparkEffects`):** a burst of sparks at the socket on every mistake, reused from Unity's `ObjectPool<T>` instead of `Instantiate`/`Destroy` each time, which avoids garbage and GC spikes. A coroutine returns each effect to the pool once it finishes playing.
 - **Kinematic access panel (`Door`):** a kinematic `Rigidbody` that code moves, not physics. `Interact()` only flips its target state; `FixedUpdate()` rotates it toward that target with `MoveRotation` and `Quaternion.RotateTowards`, so it swings smoothly and stays in sync with the physics system. The hinge is an empty parent at the panel's edge, so it pivots like a real door.
 - **Assets vs scene data:** step assets live in the project, not the scene, so they can't reference scene objects directly. A `ProcedureContext` in the scene gives them access: it builds a `Dictionary<string, Valve>` of every valve keyed by its `Id` (LINQ `ToDictionary`), and `GetValve` logs a clear error for an unknown id instead of failing later with a null reference.
 - **`ProcedureManager`:** runs the steps in order, calling `IsComplete` without knowing the step's concrete type (polymorphism). It times each step and raises `OnStepStarted` / `OnProcedureComplete`. Its state is exposed read-only (`IReadOnlyList`, get-only properties), and the first event fires in `Start()`, after every listener has subscribed in `OnEnable()`.
@@ -85,6 +86,7 @@ dotnet run
 - **Missing Input System package:** scripts using `UnityEngine.InputSystem` failed to compile until the Input System package was installed and the new input backend enabled.
 - **Scene changes missing from the repo:** the door and the first step worked locally but weren't in the pushed scene, because the scene and a step asset had unsaved changes. Now I save the scene and the project before every commit.
 - **New filter vanishing when picked up:** prefabs can't keep references to scene objects, so the filter prefab lost its hold-point reference, and the copy made from it attached to nothing. Set the reference on the scene instance.
+- **Sparks never returning to the pool:** the particle system was looping with continuous emission, so it never reported itself finished, and the coroutine waited forever. Switched it to a single non-looping burst.
 - **Gauge needle jumping on the first valve change:** the gauge only updates on `OnPressureChanged`, which fires only on change, so at startup it still showed 0 PSI while the system was at 3000. Added an initial sync in `Start()`, which runs after every `Awake()`, so the pressure system has already set its starting value.
 
 ## Project structure
@@ -104,11 +106,12 @@ PumpStationTrainer_Unity/.../Assets/Scripts/
 ├── Simulation/     PressureSystem, Gauge, FilterSocket
 ├── Procedure/      ProcedureContext, TrainingStep, ValveStateStep, PressureBelowStep,
 │                   DoorOpenStep, PartInSocketStep, ProcedureManager, MistakeTracker
+├── Effects/        SparkEffects
 └── UI/             ProcedureUI
 ```
 
 ## Next up
 
-Finish Milestone 4 with a spark effect on mistakes using an object pool (`ObjectPool<T>`), then Milestone 5: a Profiler pass, a deliberate memory-leak investigation, and refactoring the procedure manager from polling to events.
+Milestone 5: a Profiler pass with before/after screenshots, a deliberate memory-leak investigation with the Memory Profiler, and refactoring the procedure manager from polling every frame to reacting to events.
 
 **Ideas for later:** make the drain valve speed up pressure bleed-off.
