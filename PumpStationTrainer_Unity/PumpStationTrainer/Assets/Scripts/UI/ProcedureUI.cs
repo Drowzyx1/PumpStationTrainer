@@ -6,7 +6,7 @@ using UnityEngine;
 public class ProcedureUI : MonoBehaviour
 {
     [SerializeField] private ProcedureManager procedure;
-    // [SerializeField] private MistakeTracker mistakes;      // turn back on in Day 7
+    [SerializeField] private MistakeTracker mistakes;
     [SerializeField] private TMP_Text instructionText;
     [SerializeField] private TMP_Text checklistText;
     [SerializeField] private TMP_Text warningText;
@@ -16,14 +16,14 @@ public class ProcedureUI : MonoBehaviour
     {
         procedure.OnStepStarted += ShowStep;
         procedure.OnProcedureComplete += ShowSummary;
-        // mistakes.OnMistake += ShowWarning;
+        mistakes.OnMistake += ShowWarning;
     }
 
     void OnDisable()
     {
         procedure.OnStepStarted -= ShowStep;
         procedure.OnProcedureComplete -= ShowSummary;
-        // mistakes.OnMistake -= ShowWarning;
+        mistakes.OnMistake -= ShowWarning;
     }
 
     private void ShowStep(TrainingStep step)
@@ -56,7 +56,7 @@ public class ProcedureUI : MonoBehaviour
 
         summaryText.text =
             $"Total time: {total:0.0}s\n" +
-            // $"Mistakes: {mistakes.Mistakes.Count}\n" +       // turn back on in Day 7
+            $"Mistakes: {mistakes.Mistakes.Count}\n" +       // turn back on in Day 7
             $"Slowest step: {procedure.Steps[slowestIndex].instruction} ({slowest:0.0}s)";
     }
 }

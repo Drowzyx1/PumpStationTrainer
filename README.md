@@ -17,20 +17,23 @@ The finished Unity version will show each instruction on screen, track a step ch
 
 ## Progress
 
-| Milestone                                                                         | Status                                                                                        |
-| --------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------- |
-| 0 · Setup (Unity 6.3 LTS, .NET, Git)                                              | ✅ Done                                                                                       |
-| 1 · Pure C# model (console app)                                                   | ✅ Done                                                                                       |
-| 2 · Unity interaction: clickable valve, gauge driven by events, prefabs           | ✅ Done                                                                                       |
-| 3 · Procedure system: steps as ScriptableObjects, UI, mistake detection           | 🟡 Nearly done: step system, procedure manager, UI and door step done; mistake detection next |
-| 4 · Physics and polish: kinematic door, grabbable filters, socket, object pooling | 🟡 Started: kinematic access-panel door done                                                  |
-| 5 · Profiling, debugging and documentation                                        | ⬜                                                                                            |
+| Milestone                                                                         | Status                                                                                          |
+| --------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------- |
+| 0 · Setup (Unity 6.3 LTS, .NET, Git)                                              | ✅ Done                                                                                         |
+| 1 · Pure C# model (console app)                                                   | ✅ Done                                                                                         |
+| 2 · Unity interaction: clickable valve, gauge driven by events, prefabs           | ✅ Done                                                                                         |
+| 3 · Procedure system: steps as ScriptableObjects, UI, mistake detection           | ✅ Done                                                                                         |
+| 4 · Physics and polish: kinematic door, grabbable filters, socket, object pooling | 🟡 Nearly done: door, grabbable filters and socket done; pooled effects and summary polish next |
+| 5 · Profiling, debugging and documentation                                        | ⬜                                                                                              |
 
-## Milestone 3: the procedure system (in progress)
+## Milestones 3–4: the full procedure
 
-The trainee is now guided through the procedure on screen: open the access panel, close the supply valve, wait for the pressure to bleed off, reopen the valve. Each step ticks off a checklist, and the run ends with a summary.
+The complete six-step procedure now runs end to end: open the access panel, close the supply valve, wait for the pressure to bleed off, remove the clogged filter, install the new one, reopen the valve. Each step ticks off a checklist, removing the filter while the system is still pressurized triggers a warning, and the run ends with a summary of total time, mistakes and the slowest step.
 
-- **Steps as data (ScriptableObjects):** `TrainingStep` is an abstract `ScriptableObject` with an `instruction` and `abstract bool IsComplete(ProcedureContext ctx)`. `DoorOpenStep`, `ValveStateStep` and `PressureBelowStep` each override it with their own rule, and each step is an asset created from the editor menu, so a new procedure can be built without writing code.
+- **Steps as data (ScriptableObjects):** `TrainingStep` is an abstract `ScriptableObject` with an `instruction` and `abstract bool IsComplete(ProcedureContext ctx)`. `DoorOpenStep`, `ValveStateStep`, `PressureBelowStep` and `PartInSocketStep` each override it with their own rule, and each step is an asset created from the editor menu, so a new procedure can be built without writing code. One class can serve several steps with different data: `PartInSocketStep` with an empty id means "socket must be empty" (remove the filter), and with `new-filter` means "new filter installed."
+- **Grabbable filters (`Grabbable`):** non-kinematic while loose, so physics drops them; kinematic while held (parented to a hold point on the camera) or installed. Each method sets the state it creates (`PickUp`, `Drop`, `LockInto`), with a shared `Attach` helper. Picking one up raises `OnPickedUp`.
+- **Filter socket (`FilterSocket`):** a trigger collider that installs a dropped part through guard clauses (socket empty, is a `Grabbable`, not held, correct part id). It holds the installed part by reference (composition, not inheritance), subscribes to its `OnPickedUp` on insert and unsubscribes on removal, and exposes a computed `CurrentPartId`.
+- **Mistake detection (`MistakeTracker`):** a second, independent listener on the old filter's `OnPickedUp`. If pressure is above a safe level, it records the mistake and raises `OnMistake`, which the UI shows as a warning.
 - **Kinematic access panel (`Door`):** a kinematic `Rigidbody` that code moves, not physics. `Interact()` only flips its target state; `FixedUpdate()` rotates it toward that target with `MoveRotation` and `Quaternion.RotateTowards`, so it swings smoothly and stays in sync with the physics system. The hinge is an empty parent at the panel's edge, so it pivots like a real door.
 - **Assets vs scene data:** step assets live in the project, not the scene, so they can't reference scene objects directly. A `ProcedureContext` in the scene gives them access: it builds a `Dictionary<string, Valve>` of every valve keyed by its `Id` (LINQ `ToDictionary`), and `GetValve` logs a clear error for an unknown id instead of failing later with a null reference.
 - **`ProcedureManager`:** runs the steps in order, calling `IsComplete` without knowing the step's concrete type (polymorphism). It times each step and raises `OnStepStarted` / `OnProcedureComplete`. Its state is exposed read-only (`IReadOnlyList`, get-only properties), and the first event fires in `Start()`, after every listener has subscribed in `OnEnable()`.
@@ -80,6 +83,8 @@ dotnet run
 - **Build output committed by accident:** `bin/` and `obj/` inside the console project were tracked because the root ignore rules only covered the top level. Untracked them and added `**/bin/` and `**/obj/`.
 - **Nested Git repository:** Unity Hub created its own `.git` inside the Unity project, which would have made the main repo store only a pointer instead of the files. Removed the inner repo so the project lives in one repository.
 - **Missing Input System package:** scripts using `UnityEngine.InputSystem` failed to compile until the Input System package was installed and the new input backend enabled.
+- **Scene changes missing from the repo:** the door and the first step worked locally but weren't in the pushed scene, because the scene and a step asset had unsaved changes. Now I save the scene and the project before every commit.
+- **New filter vanishing when picked up:** prefabs can't keep references to scene objects, so the filter prefab lost its hold-point reference, and the copy made from it attached to nothing. Set the reference on the scene instance.
 - **Gauge needle jumping on the first valve change:** the gauge only updates on `OnPressureChanged`, which fires only on change, so at startup it still showed 0 PSI while the system was at 3000. Added an initial sync in `Start()`, which runs after every `Awake()`, so the pressure system has already set its starting value.
 
 ## Project structure
@@ -94,15 +99,16 @@ PumpSimConsole/
 
 PumpStationTrainer_Unity/.../Assets/Scripts/
 ├── Core/           ShowInDebugAttribute, IInteractable, InteractableBase
-├── Interaction/    Valve, Interactor, Door
+├── Interaction/    Valve, Interactor, Door, Grabbable
 ├── Player/         SimpleCameraController
-├── Simulation/     PressureSystem, Gauge
-├── Procedure/      ProcedureContext, TrainingStep, ValveStateStep, PressureBelowStep, DoorOpenStep, ProcedureManager
+├── Simulation/     PressureSystem, Gauge, FilterSocket
+├── Procedure/      ProcedureContext, TrainingStep, ValveStateStep, PressureBelowStep,
+│                   DoorOpenStep, PartInSocketStep, ProcedureManager, MistakeTracker
 └── UI/             ProcedureUI
 ```
 
 ## Next up
 
-Milestone 4: grabbable filters (non-kinematic physics, kinematic while held), a filter socket using a trigger collider, the remove/install filter steps, and mistake detection (removing the filter while the system is pressurized).
+Finish Milestone 4 with a spark effect on mistakes using an object pool (`ObjectPool<T>`), then Milestone 5: a Profiler pass, a deliberate memory-leak investigation, and refactoring the procedure manager from polling to events.
 
 **Ideas for later:** make the drain valve speed up pressure bleed-off.
