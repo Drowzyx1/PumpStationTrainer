@@ -17,14 +17,24 @@ The finished Unity version will show each instruction on screen, track a step ch
 
 ## Progress
 
-| Milestone                                                                         | Status  |
-| --------------------------------------------------------------------------------- | ------- |
-| 0 · Setup (Unity 6.3 LTS, .NET, Git)                                              | ✅ Done |
-| 1 · Pure C# model (console app)                                                   | ✅ Done |
-| 2 · Unity interaction: clickable valve, gauge driven by events, prefabs           | ✅ Done |
-| 3 · Procedure system: steps as ScriptableObjects, UI, mistake detection           | ✅ Done |
-| 4 · Physics and polish: kinematic door, grabbable filters, socket, object pooling | ✅ Done |
-| 5 · Profiling, debugging and documentation                                        | ⬜      |
+| Milestone                                                                         | Status                                                                                       |
+| --------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------- |
+| 0 · Setup (Unity 6.3 LTS, .NET, Git)                                              | ✅ Done                                                                                      |
+| 1 · Pure C# model (console app)                                                   | ✅ Done                                                                                      |
+| 2 · Unity interaction: clickable valve, gauge driven by events, prefabs           | ✅ Done                                                                                      |
+| 3 · Procedure system: steps as ScriptableObjects, UI, mistake detection           | ✅ Done                                                                                      |
+| 4 · Physics and polish: kinematic door, grabbable filters, socket, object pooling | ✅ Done                                                                                      |
+| 5 · Profiling, debugging and documentation                                        | 🟡 In progress: Profiler pass and memory-leak investigation done; event-driven refactor next |
+
+## Milestone 5: profiling and debugging (in progress)
+
+**Profiler pass:** I checked every script's per-frame cost in the Unity Profiler (CPU module → Hierarchy, sorted by GC Alloc). All of them allocate **0 B per frame**. To practice finding garbage, I added a string concatenation inside `PressureSystem.Update()`: the Profiler showed **58 B allocated every frame**, which I traced by expanding the Hierarchy down to the responsible method. I then removed it and verified 0 B again.
+
+| Before                              | Introduced garbage                    | After                             |
+| ----------------------------------- | ------------------------------------- | --------------------------------- |
+| ![Before](docs/profiler-before.png) | ![Garbage](docs/profiler-garbage.png) | ![After](docs/profiler-after.png) |
+
+**Memory-leak investigation:** I deliberately created a listener that subscribes to a **static** event without unsubscribing, then reloaded the scene repeatedly. Each reload added a subscriber that could never be freed (confirmed with Memory Profiler snapshots), and the event kept calling destroyed objects, throwing `MissingReferenceException`. The fix was unsubscribing in `OnDisable()`. Full write-up in [BUGLOG.md](BUGLOG.md).
 
 ## Milestones 3–4: the full procedure
 
@@ -79,6 +89,9 @@ dotnet run
 
 ## Bugs found and fixed
 
+Detailed write-ups (symptom, how I found it, cause, fix, lesson) are in [BUGLOG.md](BUGLOG.md).
+
+- **Memory leak from a static event:** listeners that never unsubscribed from a static event survived scene reloads, leaking memory and throwing `MissingReferenceException`. Fixed by unsubscribing in `OnDisable()`.
 - **Listeners subscribing more than once:** each toggle printed one, then two, then three sets of reactions. The listener setup was inside a `foreach` loop, so every pass subscribed new listeners to the same event. Moved it outside the loop so it runs once.
 - **Project file missing from the repo:** the Unity `.gitignore` template ignores all `*.csproj` files, so the console app's project file was never committed. Added an exception for it.
 - **Build output committed by accident:** `bin/` and `obj/` inside the console project were tracked because the root ignore rules only covered the top level. Untracked them and added `**/bin/` and `**/obj/`.
@@ -107,11 +120,12 @@ PumpStationTrainer_Unity/.../Assets/Scripts/
 ├── Procedure/      ProcedureContext, TrainingStep, ValveStateStep, PressureBelowStep,
 │                   DoorOpenStep, PartInSocketStep, ProcedureManager, MistakeTracker
 ├── Effects/        SparkEffects
+└── Debugging/      LeakyListener, SceneReloader (leak investigation)
 └── UI/             ProcedureUI
 ```
 
 ## Next up
 
-Milestone 5: a Profiler pass with before/after screenshots, a deliberate memory-leak investigation with the Memory Profiler, and refactoring the procedure manager from polling every frame to reacting to events.
+Finish Milestone 5: refactor `ProcedureManager` from polling every frame to reacting to events (valve, pressure, door and socket changes), so it does no work when nothing changes, then a demo GIF.
 
 **Ideas for later:** make the drain valve speed up pressure bleed-off.

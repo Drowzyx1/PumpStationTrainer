@@ -1,4 +1,4 @@
-using System;          // needed for Action
+using System;
 using UnityEngine;
 
 public class PressureSystem : MonoBehaviour
@@ -9,6 +9,7 @@ public class PressureSystem : MonoBehaviour
 
     [ShowInDebug] public float Psi { get; private set; }
     public event Action<float> OnPressureChanged;
+    public static event Action<float> OnAnyPressureChanged;
 
     void Awake()
     {
@@ -25,5 +26,6 @@ public class PressureSystem : MonoBehaviour
 
         Psi = next;
         OnPressureChanged?.Invoke(Psi);
+        OnAnyPressureChanged?.Invoke(Psi);
     }
 }
