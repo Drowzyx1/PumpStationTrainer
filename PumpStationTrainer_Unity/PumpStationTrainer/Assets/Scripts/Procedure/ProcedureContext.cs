@@ -12,6 +12,8 @@ public class ProcedureContext : MonoBehaviour
     public Door AccessPanel { get => accessPanel; }
     public FilterSocket FilterSocket { get => filterSocket; }
 
+    public IEnumerable<Valve> Valves => _valves.Values;
+
     public void Awake()
     {
         _valves = new Dictionary<string, Valve>();

@@ -1,4 +1,5 @@
 using UnityEngine;
+using System;
 
 [RequireComponent(typeof(Rigidbody))]
 public class Door : InteractableBase
@@ -10,8 +11,15 @@ public class Door : InteractableBase
     private Quaternion _closedRotation;
 
     [ShowInDebug] public bool IsOpen { get; private set; } = false;
-    public override void Interact() { IsOpen = !IsOpen; }
     public override string Prompt => IsOpen ? "Close Panel" : "Open Panel";
+
+    public event Action<bool> OnToggled;
+
+    public override void Interact()
+    {
+        IsOpen = !IsOpen;
+        OnToggled?.Invoke(IsOpen);
+    }
 
     void Awake()
     {

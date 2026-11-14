@@ -1,7 +1,6 @@
-using System.Runtime.Serialization;
-using UnityEngine;
-using System.Collections.Generic;
 using System;
+using System.Collections.Generic;
+using UnityEngine;
 
 public class ProcedureManager : MonoBehaviour
 {
@@ -19,23 +18,43 @@ public class ProcedureManager : MonoBehaviour
 
     public event Action<TrainingStep> OnStepStarted;
     public event Action OnProcedureComplete;
+
     void Start()
     {
+        foreach (Valve v in context.Valves) v.OnToggled += HandleValve;
+        context.Pressure.OnPressureChanged += HandlePressure;
+        context.AccessPanel.OnToggled += HandleDoor;
+        context.FilterSocket.OnContentsChanged += HandleSocket;
+
         _stepStart = Time.time;
         OnStepStarted?.Invoke(Current);
+        CheckCurrentStep();
     }
 
-    void Update()
+    void OnDestroy()
     {
-        if (Current == null || !Current.IsComplete(context)) return;
+        if (context == null) return;
+        foreach (Valve v in context.Valves) v.OnToggled -= HandleValve;
+        context.Pressure.OnPressureChanged -= HandlePressure;
+        context.AccessPanel.OnToggled -= HandleDoor;
+        context.FilterSocket.OnContentsChanged -= HandleSocket;
+    }
 
-        _stepTimes.Add(Time.time - _stepStart);
+    private void HandleValve(Valve valve, bool isOpen) => CheckCurrentStep();
+    private void HandlePressure(float psi) => CheckCurrentStep();
+    private void HandleDoor(bool isOpen) => CheckCurrentStep();
+    private void HandleSocket(string partId) => CheckCurrentStep();
 
-        _stepStart = Time.time;
+    private void CheckCurrentStep()
+    {
+        while (Current != null && Current.IsComplete(context))
+        {
+            _stepTimes.Add(Time.time - _stepStart);
+            _stepStart = Time.time;
+            _index++;
 
-        _index++;
-
-        if (Current == null) OnProcedureComplete?.Invoke();
-        else OnStepStarted?.Invoke(Current);
+            if (Current == null) OnProcedureComplete?.Invoke();
+            else OnStepStarted?.Invoke(Current);
+        }
     }
 }
